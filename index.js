@@ -23,6 +23,7 @@ const spooky = new Spooky({
   // Visit Github
   spooky.start('https://github.com/login');
   spooky.then(function (res) {
+    this.emit('clearscreen');
     this.emit('hello', 'About to attempt login at: ' + this.evaluate(() => {
       return document.title;
     }));
@@ -77,15 +78,14 @@ const spooky = new Spooky({
     };
     window.linkQueue = [rootLink];
     window.count = 1;
-    this.emit('console', 'made it here')
     window.visitedLinks = {};
-    // window.visitedLinks[rootLink.url] = rootLink;
     window.brokenLinks = [];
   });
 
   // Start the traversal
   spooky.then([{ globals }, runScan]);
 
+  // Spit out the final result
   spooky.then(function () {
     this.emit('console', 'The broken links are as follows:');
     this.emit('console', window.brokenLinks);
@@ -96,7 +96,6 @@ const spooky = new Spooky({
 
 spooky.on('error', function (e, stack) {
   console.error(e);
-
   if (stack) {
     console.log(stack);
   }
@@ -106,21 +105,20 @@ spooky.on('console', line => {
   console.log(line);
 });
 
-spooky.on('log', function (log) {
-  if (log.space === 'remote') {
-    console.log(log.message.replace(/ \- .*/, ''));
-  }
+spooky.on('clearscreen', () => {
+  process.stdout.write('\u001B[2J\u001B[0;0f');
 });
 
 function runScan() {
-  while (window.linkQueue.length > 0) {
+  this.repeat(window.linkQueue.length, function () {
     let currentLink = window.linkQueue.shift();
     let currentUrl = currentLink.url;
     this.emit('console', `About to open ${currentUrl}, which is linked from ${currentLink.currentUrl}`);
     this.thenOpen(currentUrl, function (res) {
       const previouslyVisited = !!window.visitedLinks[currentUrl];
       const inScope = currentUrl.indexOf(globals.targetUrl.url) !== -1;
-      if (res.status >= 400) {
+      // Some websites always respond with the "I'm a teapot" status code
+      if (res.status >= 400 && res.status !== 418) {
         window.brokenLinks.push(currentLink);
       }
 
@@ -149,15 +147,22 @@ function runScan() {
         }
         window.visitedLinks[currentUrl] = true;
       }
+      this.emit('clearscreen');
       this.emit('console', `${window.count} links traversed.`);
-      this.emit('console', `${window.brokenLinks.length} broken links found.`)
-      this.emit('console', window.linkQueue)
+      this.emit('console', `${window.linkQueue.length} links are remaining.`);
+      this.emit('console', `${window.brokenLinks.length} broken links found.`);
+      window.brokenLinks.forEach(function(link, i) {
+        this.emit('console', `Broken Link #${i + 1}:`);
+        this.emit('console', `href points to: ${link.url}`);
+        this.emit('console', `Appears on page: ${link.currentUrl}`);
+        this.emit('console', `Has the following clickable text: ${link.text}`);
+      });
       window.count += 1;
     });
-    this.then(function (res) {
-      runScan.call(this);
-    })
-  }
+  });
+  this.then(function (res) {
+    runScan.call(this);
+  });
 }
 
 function ask(msg, options) {
@@ -178,10 +183,4 @@ function TargetUrl() {
     url = defaultUrl;
   }
   return { url };
-}
-
-function getLinks() {
-  const readme = document.getElementById('readme');
-  const links = Array.from(readme.querySelectorAll('a:not(.anchor)'));
-  return links.map(link => link.getAttribute('href'));
 }
