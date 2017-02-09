@@ -42,6 +42,6 @@ unavailable.
 
 ## Future Improvements
 
-[ ] Set the scope through user input, rather than relying on the target.
-[ ] Make the output look better.
-[ ] Run the queries in parallel, rather than synchonously.
+- [ ] Set the scope through user input, rather than relying on the target.
+- [ ] Run the queries in parallel, rather than synchonously.
+- [ ] Make the output look better.
