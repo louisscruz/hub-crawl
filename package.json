@@ -4,15 +4,14 @@
   "description": "Curriculum crawler checks for broken links in the App Academy curriculum.",
   "main": "index.js",
   "scripts": {
-    "start": "babel index.js --out-file dist/index.js && phantomjs ./dist/index.js",
-    "start2": "babel index.js --out-file dist/index.js && node ./dist/index.js",
-    "start3": "babel index.js --out-file dist/index.js && casperjs ./dist/index.js",
+    "start": "babel index.js --out-file dist/index.js && node ./dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "babel-cli": "^6.22.2",
+    "babel-polyfill": "^6.22.0",
     "babel-preset-es2015": "^6.22.0",
     "casperjs": "^1.1.3",
     "eslint-config-airbnb": "^14.0.0",
