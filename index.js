@@ -1,6 +1,5 @@
 import Spooky from 'spooky';
 import rl from 'readline-sync';
-import "babel-polyfill";
 
 const globals = {
   targetUrl: new TargetUrl,
@@ -71,34 +70,25 @@ const spooky = new Spooky({
   spooky.then(function (res) {
     const currentUrl = this.getCurrentUrl();
     this.emit('console', `Currently located at: ${currentUrl}`);
-    const links = this.evaluate((currentUrl) => {
-      const readme = document.getElementById('readme');
-      const links = Array.from(readme.querySelectorAll('a:not(.anchor)'));
-      return links.map(function (link) {
-        let url = link.getAttribute('href');
-        if (url[0] === '/') {
-          url = `https://github.com${url}`;
-        }
-        const text = link.innerHTML;
-        const linkItem = { url, currentUrl, text };
-
-        return linkItem;
-      });
-    }, { currentUrl });
-    window.linkQueue = links;
+    const rootLink = {
+      url: currentUrl,
+      text: '(N/A: Root Link)',
+      currentUrl: currentUrl
+    };
+    window.linkQueue = [rootLink];
     window.count = 1;
+    this.emit('console', 'made it here')
     window.visitedLinks = {};
+    // window.visitedLinks[rootLink.url] = rootLink;
     window.brokenLinks = [];
-    this.emit('console', window.linkQueue)
-    this.emit('console', `Total of ${links.length} initial links found.`)
   });
 
   // Start the traversal
   spooky.then([{ globals }, runScan]);
 
   spooky.then(function () {
-
-    this.emit('console', window.visitedLinks);
+    this.emit('console', 'The broken links are as follows:');
+    this.emit('console', window.brokenLinks);
   });
 
   spooky.run();
@@ -150,19 +140,23 @@ function runScan() {
           });
           return newLinks;
         }, { currentUrl });
+
         if (links) {
           links.forEach(link => {
             window.linkQueue.push(link);
           });
           this.emit('console', `${links.length} links added to queue.`)
         }
+        window.visitedLinks[currentUrl] = true;
       }
-      window.visitedLinks[currentUrl] = true;
       this.emit('console', `${window.count} links traversed.`);
       this.emit('console', `${window.brokenLinks.length} broken links found.`)
+      this.emit('console', window.linkQueue)
       window.count += 1;
-      runScan.call(this);
     });
+    this.then(function (res) {
+      runScan.call(this);
+    })
   }
 }
 
