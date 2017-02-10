@@ -1,15 +1,15 @@
-# Curriculum Crawler
+# Hub Crawl
 
-Curriculum Crawler finds broken links in large Github repositories. It
+Hub Crawl finds broken links in large Github repositories. It
 finds links in the `readme` portions of the documents, scrapes the links
 of those sections, and continues the crawl on those links.
 
 ## Instructions
 
-To begin using Curriculum Crawler, clone the repository.
+To begin using Hub Crawl, clone the repository.
 
 ```
-git clone https://github.com/louisscruz/curriculum-crawler.git
+git clone https://github.com/louisscruz/hub-crawl.git
 ```
 
 Then, run:

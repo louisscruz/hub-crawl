@@ -1,5 +1,5 @@
 {
-  "name": "curriculum-crawler",
+  "name": "hub-crawl",
   "version": "1.0.0",
   "description": "Curriculum crawler checks for broken links in the App Academy curriculum.",
   "main": "index.js",
