@@ -1,9 +1,9 @@
 import Spooky from 'spooky';
-import rl from 'readline-sync';
+import TargetUrl from './target-url.js';
+import ScopeUrl from './scope-url.js';
+import UrlGlobals from './url-globals.js';
 
-const globals = {
-  targetUrl: new TargetUrl,
-}
+const globals = new UrlGlobals;
 
 const spooky = new Spooky({
   child: {
@@ -61,11 +61,11 @@ const spooky = new Spooky({
       targetUrl: globals.targetUrl,
     }, function () {
       this.emit('console', 'Successully logged in!')
-      this.emit('console', `About to perform crawl on: ${targetUrl.url}`);
+      this.emit('console', `About to perform crawl on: ${targetUrl}`);
   }]);
 
   // Visit the target URL
-  spooky.thenOpen(globals.targetUrl.url);
+  spooky.thenOpen(globals.targetUrl);
 
   // Log the current location and add initial links
   spooky.then(function (res) {
@@ -116,7 +116,7 @@ function runScan() {
     this.emit('console', `About to open ${currentUrl}, which is linked from ${currentLink.currentUrl}`);
     this.thenOpen(currentUrl, function (res) {
       const previouslyVisited = !!window.visitedLinks[currentUrl];
-      const inScope = currentUrl.indexOf(globals.targetUrl.url) !== -1;
+      const inScope = currentUrl.indexOf(globals.targetUrl) !== -1;
       // Some websites always respond with the "I'm a teapot" status code
       if (res.status >= 400 && res.status !== 418) {
         window.brokenLinks.push(currentLink);
@@ -163,24 +163,4 @@ function runScan() {
   this.then(function (res) {
     runScan.call(this);
   });
-}
-
-function ask(msg, options) {
-  return rl.question(msg, options)
-}
-
-function User() {
-  return {
-    username: ask("Enter your Github username: "),
-    password: ask("Enter your Github password: ", { noEchoBack: true })
-  }
-}
-
-function TargetUrl() {
-  const defaultUrl = 'https://github.com/appacademy/curriculum'
-  let url = ask(`Enter the URL of the target repo: (${defaultUrl})`);
-  if (url.length === 0) {
-    url = defaultUrl;
-  }
-  return { url };
 }
