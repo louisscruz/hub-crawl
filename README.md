@@ -47,7 +47,6 @@ The crawler can give false positives. If a website happens to be
 unavailable during the crawl, it will still show that URL as being
 unavailable.
 
-
 ## Future Improvements
 
 - [x] Set the scope through user input, rather than relying on the target.
