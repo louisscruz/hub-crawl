@@ -1,13 +1,39 @@
 import Spooky from 'spooky';
-import TargetUrl from './target-url.js';
-import ScopeUrl from './scope-url.js';
-import UrlGlobals from './url-globals.js';
+import rl from 'readline-sync';
+
+const ask = (msg, options) => {
+  return rl.question(msg, options)
+};
+
+class UrlGlobals {
+  constructor() {
+    const defaultUrl = 'https://github.com/appacademy/curriculum'
+    let targetUrl = ask(`Enter the URL of the target repo: (${defaultUrl})`);
+    if (targetUrl.length === 0) {
+      targetUrl = defaultUrl;
+    }
+    this.targetUrl = targetUrl;
+    let scopeUrl = ask(`Enter the URL of the scope repo: (${targetUrl})`);
+    if (scopeUrl.length === 0) {
+      scopeUrl = targetUrl;
+    }
+    this.scopeUrl = scopeUrl;
+  }
+}
+
+class User {
+  constructor() {
+    this.username = ask("Enter your Github username: ");
+    this.password = ask("Enter your Github password: ", { noEchoBack: true });
+  }
+}
 
 const globals = new UrlGlobals;
 
 const spooky = new Spooky({
   child: {
-    transport: 'http'
+    transport: 'http',
+    // spooky_lib: './node_modules/spooky/',
   },
   casper: {
     logLevel: 'debug',
@@ -85,10 +111,18 @@ const spooky = new Spooky({
   // Start the traversal
   spooky.then([{ globals }, runScan]);
 
-  // Spit out the final result
+  // Double check the broken links
   spooky.then(function () {
     this.emit('console', 'The broken links are as follows:');
     this.emit('console', window.brokenLinks);
+    this.repeat(window.brokenLinks.length, function () {
+      const currentLink = window.brokenLinks.shift();
+      this.thenOpen(currentLink, function (res) {
+        if (res.status >= 400 && res.status !== 418) {
+          window.brokenLinks.push(currentLink);
+        }
+      });
+    });
   });
 
   spooky.run();
@@ -109,7 +143,15 @@ spooky.on('clearscreen', () => {
   process.stdout.write('\u001B[2J\u001B[0;0f');
 });
 
-function runScan() {
+const runScan = function() {
+  const pluralize = (num, singular, plural) => {
+    const pluralization = plural || `${singular}s`;
+    if (num === 1) {
+      return `${num} ${singular}`;
+    } else {
+      return `${num} ${pluralization}`;
+    }
+  }
   this.repeat(window.linkQueue.length, function () {
     let currentLink = window.linkQueue.shift();
     let currentUrl = currentLink.url;
@@ -143,14 +185,14 @@ function runScan() {
           links.forEach(link => {
             window.linkQueue.push(link);
           });
-          this.emit('console', `${links.length} links added to queue.`)
+          this.emit('console', `${pluralize(links.length, 'link')} added to queue.`)
         }
         window.visitedLinks[currentUrl] = true;
       }
       this.emit('clearscreen');
-      this.emit('console', `${window.count} links traversed.`);
-      this.emit('console', `${window.linkQueue.length} links are remaining.`);
-      this.emit('console', `${window.brokenLinks.length} broken links found.`);
+      this.emit('console', `${pluralize(window.count, 'link')} traversed.`);
+      this.emit('console', `${pluralize(window.linkQueue.length, 'link')} are remaining.`);
+      this.emit('console', `${pluralize(window.brokenLinks.length, 'broken link')} found.`);
       window.brokenLinks.forEach(function(link, i) {
         this.emit('console', `Broken Link #${i + 1}:`);
         this.emit('console', `href points to: ${link.url}`);

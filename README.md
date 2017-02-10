@@ -42,6 +42,7 @@ unavailable.
 
 ## Future Improvements
 
-- [ ] Set the scope through user input, rather than relying on the target.
+- [x] Set the scope through user input, rather than relying on the target.
+- [ ] Allow the user to set the DOM selector for link scraping.
 - [ ] Run the queries in parallel, rather than synchonously.
 - [ ] Make the output look better.
