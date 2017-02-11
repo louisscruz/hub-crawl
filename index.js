@@ -18,6 +18,14 @@ class UrlGlobals {
       scopeUrl = targetUrl;
     }
     this.scopeUrl = scopeUrl;
+    const isWiki = ask(`Is your target repo a wiki?: (${this.defaultWiki(targetUrl)})`)
+    const parsedWiki = isWiki.toLowerCase() === 'y' ? true : false;
+    this.isWiki = parsedWiki;
+  }
+
+  defaultWiki(targetUrl) {
+    const isWiki = targetUrl.indexOf('/wiki') === -1 ? false : true;
+    return isWiki ? 'Y/n' : 'y/N';
   }
 }
 
@@ -33,7 +41,6 @@ const globals = new UrlGlobals;
 const spooky = new Spooky({
   child: {
     transport: 'http',
-    // spooky_lib: './node_modules/spooky/',
   },
   casper: {
     logLevel: 'debug',
@@ -86,8 +93,14 @@ const spooky = new Spooky({
     {
       targetUrl: globals.targetUrl,
     }, function () {
-      this.emit('console', 'Successully logged in!')
-      this.emit('console', `About to perform crawl on: ${targetUrl}`);
+      const currentUrl = this.getCurrentUrl();
+      if (currentUrl === 'https://github.com/') {
+        this.emit('console', 'Successully logged in!')
+        this.emit('console', `About to perform crawl on: ${targetUrl}`);
+      } else {
+        this.emit('console', 'Error logging in.');
+        this.exit();
+      }
   }]);
 
   // Visit the target URL
@@ -157,17 +170,19 @@ const runScan = function() {
     let currentUrl = currentLink.url;
     this.emit('console', `About to open ${currentUrl}, which is linked from ${currentLink.currentUrl}`);
     this.thenOpen(currentUrl, function (res) {
-      const previouslyVisited = !!window.visitedLinks[currentUrl];
-      const inScope = currentUrl.indexOf(globals.targetUrl) !== -1;
       // Some websites always respond with the "I'm a teapot" status code
       if (res.status >= 400 && res.status !== 418) {
         window.brokenLinks.push(currentLink);
       }
-
-      if (!previouslyVisited && inScope) {
-        const links = this.evaluate((currentUrl) => {
-          const readme = document.getElementById('readme');
-          let newLinks = Array.from(readme.querySelectorAll('a:not(.anchor)'));
+    });
+    const previouslyVisited = !!window.visitedLinks[currentUrl];
+    const inScope = currentUrl.slice(0, globals.targetUrl.length) === globals.targetUrl;
+    if (!previouslyVisited && inScope) {
+      const targetDivSelector = globals.isWiki ? 'wiki-wrapper' : 'readme';
+      this.waitForSelector(`#${targetDivSelector}`, function () {
+        const links = this.evaluate(function (currentUrl, targetDivSelector) {
+          const targetDiv = document.getElementById(targetDivSelector);
+          let newLinks = Array.from(targetDiv.querySelectorAll('a:not(.anchor)'));
           newLinks = newLinks.map(function (link) {
             let url = link.getAttribute('href');
             if (url[0] === '/') {
@@ -179,7 +194,7 @@ const runScan = function() {
             return linkItem;
           });
           return newLinks;
-        }, { currentUrl });
+        }, { currentUrl, targetDivSelector });
 
         if (links) {
           links.forEach(link => {
@@ -188,12 +203,17 @@ const runScan = function() {
           this.emit('console', `${pluralize(links.length, 'link')} added to queue.`)
         }
         window.visitedLinks[currentUrl] = true;
-      }
+      }, function () {
+        const error = `Unable to find a target div with selector #${targetDivSelector} at ${currentUrl}`;
+        window.selectorErrors.push(error);
+      });
+    }
+    this.then(function () {
       this.emit('clearscreen');
       this.emit('console', `${pluralize(window.count, 'link')} traversed.`);
       this.emit('console', `${pluralize(window.linkQueue.length, 'link')} are remaining.`);
       this.emit('console', `${pluralize(window.brokenLinks.length, 'broken link')} found.`);
-      window.brokenLinks.forEach(function(link, i) {
+      window.brokenLinks.forEach(function (link, i) {
         this.emit('console', `Broken Link #${i + 1}:`);
         this.emit('console', `href points to: ${link.url}`);
         this.emit('console', `Appears on page: ${link.currentUrl}`);
