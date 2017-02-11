@@ -18,12 +18,15 @@ class UrlGlobals {
       scopeUrl = targetUrl;
     }
     this.scopeUrl = scopeUrl;
-    const isWiki = ask(`Is your target repo a wiki?: (${this.defaultWiki(targetUrl)})`)
-    const parsedWiki = isWiki.toLowerCase() === 'y' ? true : false;
+    const defaultWiki = this.defaultWiki(targetUrl);
+    const isWiki = ask(`Is your target repo a wiki?: (${defaultWiki})`)
+    const parsedWiki = isWiki.length > 0 && isWiki.toLowerCase() === 'y' ? true : false;
+    console.log(parsedWiki);
     this.isWiki = parsedWiki;
   }
 
   defaultWiki(targetUrl) {
+    console.log(targetUrl);
     const isWiki = targetUrl.indexOf('/wiki') === -1 ? false : true;
     return isWiki ? 'Y/n' : 'y/N';
   }
@@ -119,6 +122,7 @@ const spooky = new Spooky({
     window.count = 1;
     window.visitedLinks = {};
     window.brokenLinks = [];
+    window.selectorErrors = [];
   });
 
   // Start the traversal
@@ -218,6 +222,9 @@ const runScan = function() {
         this.emit('console', `href points to: ${link.url}`);
         this.emit('console', `Appears on page: ${link.currentUrl}`);
         this.emit('console', `Has the following clickable text: ${link.text}`);
+      });
+      window.selectorErrors.forEach(function (err) {
+        this.emit('console', err);
       });
       window.count += 1;
     });
