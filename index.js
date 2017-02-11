@@ -21,12 +21,10 @@ class UrlGlobals {
     const defaultWiki = this.defaultWiki(targetUrl);
     const isWiki = ask(`Is your target repo a wiki?: (${defaultWiki})`)
     const parsedWiki = isWiki.length > 0 && isWiki.toLowerCase() === 'y' ? true : false;
-    console.log(parsedWiki);
     this.isWiki = parsedWiki;
   }
 
   defaultWiki(targetUrl) {
-    console.log(targetUrl);
     const isWiki = targetUrl.indexOf('/wiki') === -1 ? false : true;
     return isWiki ? 'Y/n' : 'y/N';
   }
