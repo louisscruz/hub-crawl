@@ -1,6 +1,10 @@
 import Nightmare from 'nightmare';
+import Async from 'async';
 
-let nightmare = Nightmare({ show: true });
+let nightmare = Nightmare({
+  show: true,
+  pollInterval: 50,
+});
 
 const login = async () => {
   try {
@@ -10,21 +14,7 @@ const login = async () => {
         const url = document.URL;
         return url === 'https://github.com/';
       })
-  } catch(e) {
-    console.log(e);
-  }
-}
-
-const scrapeLinks = async () => {
-  console.log('attempting scrape');
-  try {
-    return await nightmare
-      .goto('https://github.com/appacademy/curriculum')
-      .wait(3000)
-      .evaluate(() => {
-        const as = document.querySelectorAll('a');
-        return Array.from(as).map(el => el.href);
-      })
+      .end()
   } catch(e) {
     console.log(e);
   }
@@ -32,7 +22,25 @@ const scrapeLinks = async () => {
 
 login()
   .then(async () => {
-    const links = await scrapeLinks();
-    links.forEach(el => console.log(el))
+    const nightmare = Nightmare({
+      show: true,
+      webPreferences: {
+        partition: 'persist: testing'
+      }
+    });
+    try {
+      return await nightmare
+      .goto('https://github.com/appacademy/curriculum')
+      .wait('body')
+      .evaluate(function () {
+        const targetDiv = document.getElementById('readme');
+        return targetDiv.querySelectorAll('a:not(.anchor)')
+      })
+      .end()
+    } catch(e) {
+      console.log(e);
+    }
   })
-  // .then(res => console.log(res))
+  .then((res) => {
+    console.log(res);
+  })
