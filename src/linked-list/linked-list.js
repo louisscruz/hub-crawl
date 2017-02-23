@@ -8,31 +8,33 @@ class LinkedList {
   }
 
   enqueue(element) {
-    if (this.length === 0) {
+    this.length += 1;
+    if (this.length === 1) {
       this.head.value = element;
-    } else if (this.length === 1) {
+      return this.head.value;
+    } else if (this.length === 2) {
       this.tail.value = element;
+      return this.tail.value;
     } else {
       this.tail.next = new LinkedListNode(element);
       this.tail = this.tail.next;
+      return this.tail.value;
     }
-    this.length += 1;
-    return this.tail;
   }
 
   dequeue() {
     if (this.length === 0) return;
     this.length -= 1;
     const oldHead = this.head;
-    if (this.length >= 3) {
+    if (this.length >= 2) {
       this.head = this.head.next;
       return oldHead.value;
-    } else if (this.length === 2) {
+    } else if (this.length === 1) {
       this.head = this.head.next;
       this.tail = new LinkedListNode;
       this.head.next = this.tail;
       return oldHead.value
-    } else if (this.length === 1) {
+    } else if (this.length === 0) {
       this.head = new LinkedListNode(null, this.tail);
       return oldHead.value;
     }

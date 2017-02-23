@@ -30,11 +30,10 @@ const entry = 'http://github.com/appacademy/curriculum';
 const rootLink = new Link(entry, entry, 'root');
 linkQueue.enqueue(rootLink);
 
-console.log(linkQueue);
-
 login()
   .then(async () => {
     const currentLink = linkQueue.dequeue();
+    console.log(currentLink);
     const nightmare = Nightmare({
       show: true,
       webPreferences: {
