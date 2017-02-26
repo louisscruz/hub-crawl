@@ -8,10 +8,33 @@ const entry = 'https://github.com/appacademy/curriculum';
 const rootLink = new Link(entry, entry, 'root');
 linkQueue.enqueue(rootLink);
 
+const generateWorkers = (number) => {
+  const workers = {};
+  for (let i = 0; i < number; i += 1) {
+    const nightmare = Nightmare({
+      show: false,
+      pollInterval: 50,
+      webPreferences: {
+        partition: `persist: testing`
+      }
+    });
+    workers[i] = nightmare;
+  }
+  return workers;
+}
+
+const workers = generateWorkers(8);
+
+const availableWorkers = new LinkedList();
+for (let i = 0; i < 8; i += 1) {
+  availableWorkers.enqueue(i);
+}
+
 const visitedLinks = {};
 const brokenLinks = {};
 let visitedLinkCount = 0;
 let brokenLinkCount = 0;
+let averageResponseTime = 0;
 
 let nightmare = Nightmare({
   show: true,
@@ -33,22 +56,22 @@ const login = async () => {
   } catch(e) {
     console.log(e);
   }
-}
+};
 
 const isOutOfScope = (url) => {
   const scope = entry;
   const urlSlice = url.slice(0, scope.length);
   return urlSlice !== scope;
-}
+};
 
 const alreadyVisited = (url) => {
   !!visitedLinks[url];
-}
+};
 
 const addToVisited = (url) => {
   visitedLinks[url] = true;
   visitedLinkCount += 1;
-}
+};
 
 const addBrokenLink = (link) => {
   currentLinkValue = brokenLinks[link.href];
@@ -57,23 +80,27 @@ const addBrokenLink = (link) => {
   }
   currentLinkValue.enqueue(link);
   brokenLinkCount += 1;
-}
+};
 
 const averageLinksPerMinute = (startTime) => {
   const now = new Date();
   const timeDiff = (now - startTime) / (1000 * 60);
+  const linksPerMinute = visitedLinkCount / timeDiff;
+  return Math.round(linksPerMinute * 100) / 100;
+};
 
-  return visitedLinkCount / timeDiff;
-}
+const addToResponseTime = (startTime) => {
+  const now = new Date();
+  const newTime = (now - startTime) / 1000;
+  const oldResponseSum = averageResponseTime * visitedLinkCount;
+  const newAverage = (oldResponseSum + newTime) / (visitedLinkCount + 1);
+  averageResponseTime = Math.round(newAverage * 100) / 100;
+};
 
-const visitAndScrapeLinks = async (link) => {
+const visitAndScrapeLinks = async (link, workerNumber) => {
   try {
-    const nightmare = Nightmare({
-      // show: true,
-      webPreferences: {
-        partition: 'persist: testing'
-      }
-    });
+    const startResponse = new Date();
+    const nightmare = workers[workerNumber]
 
     if (alreadyVisited(link.href)) {
       return await Promise.reject('Already visited link')
@@ -82,12 +109,12 @@ const visitAndScrapeLinks = async (link) => {
     return await nightmare
       .goto(link.href)
       .then(async (status) => {
+        addToResponseTime(startResponse);
         addToVisited(link.href);
         if (status.code >= 400) {
           addBrokenLink(link);
           return await Promise.reject('Broken link found');
         }
-        // Check to see if the link href is in scope!
         if (isOutOfScope(link.href)) {
           return await Promise.reject('Link out of bounds');
         }
@@ -105,62 +132,56 @@ const visitAndScrapeLinks = async (link) => {
             return formattedLinks;
           }, link);
       })
-      .then(links => {
-        return nightmare.end().then(() => {
-          const newLinks = links.map(link => (
-            new Link(link.href, link.location, link.text)
-          ));
-          return newLinks;
-        });
+      .then(async links => {
+        const newLinks = links.map(link => (
+          new Link(link.href, link.location, link.text)
+        ));
+        return await newLinks;
       })
       .catch(e => {
-        return nightmare.end().then(() => {
-          console.log('current url', link.href);
-          console.log('come at me', e);
-          console.log(linkQueue);
-        });
+        console.log(e);
       })
   } catch(e) {
-    console.log('made it here', e);
+    console.log(e);
   }
-}
+};
+
+const displayLinkData = (startTime, workers) => {
+  process.stdout.write('\u001B[2J\u001B[0;0f');
+  console.log(`Visited ${visitedLinkCount} links.`);
+  console.log(`${linkQueue.length} links remaining.`);
+  console.log(`(averaging ${averageLinksPerMinute(startTime)} per minute)`)
+  console.log(`(averaging ${averageResponseTime} seconds per request)`);
+  console.log((`there are currently ${brokenLinkCount} broken links`));
+  console.log(`there are currently ${8 - availableWorkers.length} workers`);
+};
 
 login()
-  .then(async () => {
-    // let traversing = true;
-    // while (traversing) {
+  .then(() => {
     const startTime = new Date();
-    let traversing = true;
-    let workers = 0;
     const handleWorkers = setInterval(() => {
-      if (workers < 8 && linkQueue.length > 0) {
-        workers += 1;
-        process.stdout.write('\u001B[2J\u001B[0;0f');
-        console.log(`Visited ${visitedLinkCount} links.`);
-        console.log(`(averaging ${averageLinksPerMinute(startTime)} per minute)`)
-        console.log((`there are currently ${brokenLinkCount} broken links`));
-        console.log(`there are currently ${workers} workers`);
+      if (availableWorkers.length > 0 && linkQueue.length > 0) {
+        const freeWorker = availableWorkers.dequeue();
+        displayLinkData(startTime, freeWorker);
         const currentLink = linkQueue.dequeue();
-        visitAndScrapeLinks(currentLink)
-        .then((links) => {
-          if (!links) {
-            workers -= 1;
+        visitAndScrapeLinks(currentLink, freeWorker)
+          .then((links) => {
+            if (!links) {
+              availableWorkers.enqueue(freeWorker);
+              return;
+            }
+            links.forEach((link) => {
+              linkQueue.enqueue(link);
+            });
+            availableWorkers.enqueue(freeWorker);
+          })
+          .catch(() => {
+            availableWorkers.enqueue(freeWorker);
             return;
-          };
-          links.forEach((link) => {
-            linkQueue.enqueue(link);
           });
-          console.log(`Added ${links.length} links`);
-          console.log(`There are currently ${linkQueue.length} links in the queue.`);
-          workers -= 1;
-        })
-        .catch(() => {
-          workers -= 1;
-          return;
-        });
       }
-      if (linkQueue.length > 0 && workers === 0) {
+      if (linkQueue.length > 0 && availableWorkers.length === 8) {
         clearInterval(handleWorkers);
       }
     }, 50);
-  })
+  });

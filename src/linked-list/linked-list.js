@@ -2,7 +2,7 @@ import LinkedListNode from './linked-list-node';
 
 class LinkedList {
   constructor() {
-    this.tail = new LinkedListNode();
+    this.tail = new LinkedListNode(null);
     this.head = new LinkedListNode(null, this.tail);
     this.length = 0;
   }
@@ -31,7 +31,7 @@ class LinkedList {
       return oldHead.value;
     } else if (this.length === 1) {
       this.head = this.head.next;
-      this.tail = new LinkedListNode;
+      this.tail = new LinkedListNode(null);
       this.head.next = this.tail;
       return oldHead.value
     } else if (this.length === 0) {

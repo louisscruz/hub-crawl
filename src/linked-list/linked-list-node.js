@@ -1,6 +1,6 @@
 class LinkedListNode {
   constructor(value, next) {
-    this.value = value || null;
+    this.value = value;
     this.next = next || null;
   }
 }
