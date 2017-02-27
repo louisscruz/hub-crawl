@@ -81,7 +81,7 @@ class HubCrawl {
     process.stdout.write('\u001B[2J\u001B[0;0f');
     console.log(`Visited ${this.visitedLinkCount} links.`);
     console.log(`${this.linkQueue.length} links remaining.`);
-    console.log(`(averaging ${this.averageLinksPerMinute(startTime, this.visitedLinkCount)} per minute)`);
+    console.log(`(averaging ${this.averageLinksPerMinute(startTime, this.visitedLinkCount)} links per minute)`);
     console.log(`(averaging ${this.averageResponseTime} seconds per request)`);
     console.log((`there are currently ${this.brokenLinkCount} broken links`));
     console.log(`there are currently ${this.maxWorkers - this.availableWorkers.length} workers`);
