@@ -108,11 +108,11 @@ class HubCrawl {
       // Handle the case where a concurrent process has already visited
       // a link.
       if (this.alreadyVisited(link.href)) {
-        return await Promise.reject('Already visited link');
+        return Promise.reject('Already visited link');
       }
       return await nightmare
         .goto(link.href)
-        .then(async (res) => {
+        .then((res) => {
           this.addToResponseTime(startResponse);
           this.addToVisited(link.href);
           if (res.code >= 400) {
@@ -133,20 +133,16 @@ class HubCrawl {
     try {
       return await nightmare
         .wait('body')
-        .evaluate(async (currentLink, visitedLinks) => {
+        .evaluate(async (currentLink) => {
           const target = document.getElementById('readme');
           const links = target.querySelectorAll('a:not(.anchor)');
-          const unvisitedLinks = [];
-          Array.from(links).forEach((el) => {
+          return Array.from(links).map((el) => {
             const href = el.href;
-            if (visitedLinks[href]) return;
             const location = currentLink.href;
-            const text = 'something';
-            const unvisitedLink = { href, location, text };
-            unvisitedLinks.push(unvisitedLink);
+            const text = el.innerHTML;
+            return { href, location, text };
           });
-          return unvisitedLinks;
-        }, link, this.visitedLinks);
+        }, link);
     } catch (e) {
       return e;
     }
@@ -158,11 +154,16 @@ class HubCrawl {
       return this.visitLink(nightmare, link)
         .then(() => (
           this.scrapeLinks(nightmare, link)
-            .then(links => (
-              links.map(el => (
-                new Link(el.href, el.location, el.text)
-              ))
-            ))
+            .then((links) => {
+              const unvisitedLinks = new LinkedList();
+              links.forEach((el) => {
+                if (!this.visitedLinks[el.href]) {
+                  const newLink = new Link(el.href, el.location, el.text);
+                  unvisitedLinks.enqueue(newLink);
+                }
+              });
+              return unvisitedLinks;
+            })
             .catch(e => Promise.reject(e))
         ))
         .catch(e => Promise.reject(e));
@@ -188,9 +189,12 @@ class HubCrawl {
                   return;
                 }
                 links.forEach((link) => {
-                  this.linkQueue.enqueue(link);
+                  if (this.visitedLinks[link.href]) {
+                    console.log('already visited', link.href);
+                  } else {
+                    this.linkQueue.enqueue(link);
+                  }
                 });
-
                 this.availableWorkers.enqueue(freeWorker);
               })
               .catch(() => {

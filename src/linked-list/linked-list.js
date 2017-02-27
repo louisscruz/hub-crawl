@@ -15,11 +15,10 @@ class LinkedList {
     } else if (this.length === 2) {
       this.tail.value = element;
       return this.tail.value;
-    } else {
-      this.tail.next = new LinkedListNode(element);
-      this.tail = this.tail.next;
-      return this.tail.value;
     }
+    this.tail.next = new LinkedListNode(element);
+    this.tail = this.tail.next;
+    return this.tail.value;
   }
 
   dequeue() {
@@ -37,6 +36,14 @@ class LinkedList {
     } else if (this.length === 0) {
       this.head = new LinkedListNode(null, this.tail);
       return oldHead.value;
+    }
+  }
+
+  forEach(cb) {
+    let currentNode = this.head;
+    while (currentNode.next) {
+      cb(currentNode.value);
+      currentNode = currentNode.next;
     }
   }
 }
