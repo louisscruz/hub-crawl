@@ -15,7 +15,7 @@ export const generateNightmareInstance = show => (
   Nightmare({
     pollInterval: 50,
     webPreferences: {
-      partition: 'persist: logged in',
+      partition: 'persist: authenticated',
     },
     show,
   })

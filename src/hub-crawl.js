@@ -112,7 +112,7 @@ class HubCrawl {
       }
       return await nightmare
         .goto(link.href)
-        .then((res) => {
+        .then(async (res) => {
           this.addToResponseTime(startResponse);
           this.addToVisited(link.href);
           if (res.code >= 400) {
@@ -122,7 +122,7 @@ class HubCrawl {
           if (this.isOutOfScope(link.href)) {
             return Promise.reject('Link out of bounds');
           }
-          return status;
+          return res;
         });
     } catch (e) {
       return e;
@@ -133,7 +133,7 @@ class HubCrawl {
     try {
       return await nightmare
         .wait('body')
-        .evaluate((currentLink, visitedLinks) => {
+        .evaluate(async (currentLink, visitedLinks) => {
           const target = document.getElementById('readme');
           const links = target.querySelectorAll('a:not(.anchor)');
           const unvisitedLinks = [];
@@ -153,15 +153,22 @@ class HubCrawl {
   }
 
   async visitAndScrapeLinks(link, workerNumber) {
-    const nightmare = this.workers[workerNumber];
-    return this.visitLink(nightmare, link)
-      .then(() => this.scrapeLinks(nightmare, link))
-      .then(links => (
-        links.map(el => (
-          new Link(el.href, el.location, el.text)
+    try {
+      const nightmare = this.workers[workerNumber];
+      return this.visitLink(nightmare, link)
+        .then(() => (
+          this.scrapeLinks(nightmare, link)
+            .then(links => (
+              links.map(el => (
+                new Link(el.href, el.location, el.text)
+              ))
+            ))
+            .catch(e => Promise.reject(e))
         ))
-      ))
-      .catch(e => console.log(e));
+        .catch(e => Promise.reject(e));
+    } catch (e) {
+      return e;
+    }
   }
 
   async traverseLinks() {
@@ -183,6 +190,7 @@ class HubCrawl {
                 links.forEach((link) => {
                   this.linkQueue.enqueue(link);
                 });
+
                 this.availableWorkers.enqueue(freeWorker);
               })
               .catch(() => {
