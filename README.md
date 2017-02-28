@@ -1,8 +1,11 @@
 # Hub Crawl
 
 Hub Crawl finds broken links in large Github repositories. It
-finds links in the `readme` portions of the documents, scrapes the links
-of those sections, and continues the crawl on those links.
+finds links in the `readme` portions of the documents (or the
+`wiki-content` for wiki pages), scrapes the links of those sections, and
+continues the crawl beginning with those newfound links. It essentially
+performs a concurrent breadth-first graph traversal and logs broken
+links as it goes.
 
 ## Instructions
 
@@ -30,16 +33,14 @@ Then, run:
 npm start
 ```
 
-You will be asked to provide your target URL, your scope URL, and your
-Github credentials.
+You will be asked to provide your entry URL, your scope URL.
 
 The target URL is the link at which the whole search begins.
 
 The scope URL defines the limits of the locations that will be scraped.
-Any URL that is linked to that is outside of this scope will be visited.
-However, links outside the designated scope will not be scraped for
-links. The scope URL is the boundary that prevents us from potentially
-scouring the entire internet.
+Any URL that lies outside of this scope will be visited, but not scraped.
+The scope URL is the boundary that prevents us from potentially scouring
+the entire internet.
 
 ## Warnings
 
@@ -50,6 +51,8 @@ unavailable.
 ## Future Improvements
 
 - [x] Set the scope through user input, rather than relying on the target.
-- [ ] Allow the user to set the DOM selector for link scraping.
-- [ ] Run the queries in parallel, rather than synchonously.
+- [x] Allow the user to set the DOM selector for link scraping.
+- [x] Run the queries in parallel, rather than synchonously.
+- [ ] Perform a second check on all broken links to minimize false positives.
 - [ ] Make the output look better.
+- [ ] Allow for the crawler to be easily distributed.
