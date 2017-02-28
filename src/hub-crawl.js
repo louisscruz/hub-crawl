@@ -8,7 +8,8 @@ import {
 class HubCrawl {
   constructor(maxWorkers, entry) {
     this.maxWorkers = maxWorkers;
-    this.workers = this.generateWorkers();
+    this.workers = {};
+    this.generateWorkers();
     this.availableWorkers = this.generateAvailableWorkers();
     this.entry = entry;
     this.linkQueue = this.generateLinkQueue();
@@ -28,12 +29,17 @@ class HubCrawl {
     return linkQueue;
   }
 
-  generateWorkers() {
-    const workers = {};
-    for (let i = 0; i < this.maxWorkers; i += 1) {
-      workers[i] = generateNightmareInstance(false);
+  generateWorkers(...numbers) {
+    if (numbers.length === 0) {
+      const workers = {};
+      for (let i = 0; i < this.maxWorkers; i += 1) {
+        workers[i] = generateNightmareInstance(false);
+      }
+      // return workers;
+      this.workers = workers;
+    } else {
+      this.tearDownAndResetWorkers
     }
-    return workers;
   }
 
   generateAvailableWorkers() {
@@ -77,14 +83,52 @@ class HubCrawl {
     this.averageResponseTime = Math.round(newAverage * 100) / 100;
   }
 
-  displayLinkData(startTime) {
+  tearDownWorkers(...numbers) {
+    if (numbers.length === 0) {
+      for (let i = 0; i < this.maxWorkers; i += 1) {
+        numbers.push(i);
+      }
+    }
+    numbers.forEach((number) => {
+      const nightmare = this.workers[number];
+      nightmare.end();
+      this.workers[number] = null;
+    });
+  }
+
+  clearScreen() {
     process.stdout.write('\u001B[2J\u001B[0;0f');
+  }
+
+  displayLinkData(startTime) {
+    this.clearScreen();
     console.log(`Visited ${this.visitedLinkCount} links.`);
     console.log(`${this.linkQueue.length} links remaining.`);
     console.log(`(averaging ${this.averageLinksPerMinute(startTime, this.visitedLinkCount)} links per minute)`);
     console.log(`(averaging ${this.averageResponseTime} seconds per request)`);
     console.log((`there are currently ${this.brokenLinkCount} broken links`));
     console.log(`there are currently ${this.maxWorkers - this.availableWorkers.length} workers`);
+  }
+
+  displayErrors() {
+    this.clearScreen();
+    console.log(`${this.brokenLinkCount} broken links found:`);
+    console.log('===== BROKEN LINKS =====');
+    let counter = 1;
+    Object.keys(this.brokenLinks).forEach((key) => {
+      this.brokenLinks[key].forEach((link) => {
+        console.log(`------Broken link #${counter}------`);
+        console.log('The broken link is a reference to:');
+        console.log(link.href);
+        console.log('The broken link is referenced at:');
+        console.log(link.location);
+        console.log('The broken link is referenced with the text:');
+        console.log(link.text);
+        console.log('--------------------------');
+        counter += 1;
+      });
+    });
+    console.log('========================');
   }
 
   async login() {
@@ -174,24 +218,23 @@ class HubCrawl {
 
   async traverseLinks() {
     return this.login()
-      .then(() => {
-        const startTime = new Date();
-        const handleWorkers = setInterval(() => {
-          if (this.availableWorkers.length > 0 &&
+      .then(() => (
+        new Promise((resolve) => {
+          const startTime = new Date();
+          const handleWorkers = setInterval(() => {
+            if (this.availableWorkers.length > 0 &&
               this.linkQueue.length > 0) {
-            const freeWorker = this.availableWorkers.dequeue();
-            this.displayLinkData(startTime, freeWorker);
-            const currentLink = this.linkQueue.dequeue();
-            this.visitAndScrapeLinks(currentLink, freeWorker)
+              const freeWorker = this.availableWorkers.dequeue();
+              this.displayLinkData(startTime, freeWorker);
+              const currentLink = this.linkQueue.dequeue();
+              this.visitAndScrapeLinks(currentLink, freeWorker)
               .then((links) => {
                 if (!links) {
                   this.availableWorkers.enqueue(freeWorker);
                   return;
                 }
                 links.forEach((link) => {
-                  if (this.visitedLinks[link.href]) {
-                    console.log('already visited', link.href);
-                  } else {
+                  if (!this.alreadyVisited(link.href) && !this.isOutOfScope(link.href)) {
                     this.linkQueue.enqueue(link);
                   }
                 });
@@ -200,12 +243,21 @@ class HubCrawl {
               .catch(() => {
                 this.availableWorkers.enqueue(freeWorker);
               });
-          } else if (this.availableWorkers.length === this.maxWorkers &&
-              this.linkQueue.length > 0) {
-            clearInterval(handleWorkers);
-          }
-        }, 50);
-      });
+            } else if (this.availableWorkers.length === this.maxWorkers &&
+              this.linkQueue.length === 0) {
+              clearInterval(handleWorkers);
+              this.tearDownWorkers();
+              return resolve();
+            }
+          }, 50);
+        })
+      ));
+  }
+
+  async traverseAndLogOutput() {
+    this.traverseLinks().then(() => {
+      this.displayErrors();
+    });
   }
 }
 
