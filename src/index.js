@@ -1,5 +1,9 @@
 import HubCrawl from './hub-crawl';
+import { ask } from './util';
 
-const crawl = new HubCrawl(8, 'https://github.com/appacademy/curriculum/blob/master/javascript/README.md');
+const entry = ask('Enter an entry point: ');
+const scope = ask(`Enter a scope url: (${entry}) `);
+
+const crawl = new HubCrawl(24, entry, scope);
 
 crawl.traverseAndLogOutput();

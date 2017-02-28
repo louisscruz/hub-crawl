@@ -1,4 +1,31 @@
 import Nightmare from 'nightmare';
+import rl from 'readline-sync';
+
+export const ask = (msg, options) => (
+  rl.question(msg, options)
+);
+
+export const clearScreen = () => {
+  process.stdout.write('\u001B[2J\u001B[0;0f');
+};
+
+export const isWiki = url => (
+  url.indexOf('/wiki') !== -1
+);
+
+export const properElementId = (url) => {
+  if (isWiki(url)) {
+    return 'wiki-content';
+  }
+  return 'readme';
+};
+
+export const properSelector = (url) => {
+  if (isWiki(url)) {
+    return 'a';
+  }
+  return 'a:not(.anchor)';
+};
 
 export const averageLinksPerMinute = (startTime, visitedLinkCount) => {
   const now = new Date();
@@ -15,8 +42,8 @@ export const generateNightmareInstance = show => (
   Nightmare({
     pollInterval: 50,
     webPreferences: {
-      // partition: 'persist: authenticated',
-      partition: `persist: ${Math.random()}`
+      partition: 'persist: authenticated',
+      images: false,
     },
     show,
   })

@@ -3,15 +3,19 @@ import LinkedList from './linked-list';
 import {
   generateNightmareInstance,
   averageLinksPerMinute,
+  clearScreen,
+  properElementId,
+  properSelector,
 } from './util';
 
 class HubCrawl {
-  constructor(maxWorkers, entry) {
+  constructor(maxWorkers, entry, scope) {
     this.maxWorkers = maxWorkers;
     this.workers = {};
     this.generateWorkers();
     this.availableWorkers = this.generateAvailableWorkers();
     this.entry = entry;
+    this.scope = scope || entry;
     this.linkQueue = this.generateLinkQueue();
     this.visitedLinks = {};
     this.brokenLinks = {};
@@ -29,16 +33,17 @@ class HubCrawl {
     return linkQueue;
   }
 
-  generateWorkers(...numbers) {
-    if (numbers.length === 0) {
-      const workers = {};
-      for (let i = 0; i < this.maxWorkers; i += 1) {
-        workers[i] = generateNightmareInstance(false);
-      }
-      // return workers;
-      this.workers = workers;
-    } else {
-      this.tearDownAndResetWorkers
+  generateWorker(number) {
+    const newWorker = {
+      instance: generateNightmareInstance(false),
+      requests: 0,
+    };
+    this.workers[number] = newWorker;
+  }
+
+  generateWorkers() {
+    for (let i = 0; i < this.maxWorkers; i += 1) {
+      this.generateWorker(i);
     }
   }
 
@@ -50,10 +55,27 @@ class HubCrawl {
     return availableWorkers;
   }
 
+  tearDownWorkers(...numbers) {
+    if (numbers.length === 0) {
+      for (let i = 0; i < this.maxWorkers; i += 1) {
+        numbers.push(i);
+      }
+    }
+    numbers.forEach((number) => {
+      const nightmare = this.workers[number].instance;
+      nightmare.end();
+      this.workers[number] = null;
+    });
+  }
+
+  resetWorker(number) {
+    this.tearDownWorkers(number);
+    this.generateWorker(number);
+  }
+
   isOutOfScope(url) {
-    const scope = this.entry;
-    const urlSlice = url.slice(0, scope.length);
-    return urlSlice !== scope;
+    const urlSlice = url.slice(0, this.scope.length);
+    return urlSlice !== this.scope;
   }
 
   alreadyVisited(url) {
@@ -83,25 +105,8 @@ class HubCrawl {
     this.averageResponseTime = Math.round(newAverage * 100) / 100;
   }
 
-  tearDownWorkers(...numbers) {
-    if (numbers.length === 0) {
-      for (let i = 0; i < this.maxWorkers; i += 1) {
-        numbers.push(i);
-      }
-    }
-    numbers.forEach((number) => {
-      const nightmare = this.workers[number];
-      nightmare.end();
-      this.workers[number] = null;
-    });
-  }
-
-  clearScreen() {
-    process.stdout.write('\u001B[2J\u001B[0;0f');
-  }
-
   displayLinkData(startTime) {
-    this.clearScreen();
+    clearScreen();
     console.log(`Visited ${this.visitedLinkCount} links.`);
     console.log(`${this.linkQueue.length} links remaining.`);
     console.log(`(averaging ${this.averageLinksPerMinute(startTime, this.visitedLinkCount)} links per minute)`);
@@ -111,10 +116,15 @@ class HubCrawl {
   }
 
   displayErrors() {
-    this.clearScreen();
-    console.log(`${this.brokenLinkCount} broken links found:`);
-    console.log('===== BROKEN LINKS =====');
+    clearScreen();
+    if (this.brokenLinkCount <= 1) {
+      console.log(`${this.brokenLinkCount} broken link found:`);
+    } else {
+      console.log(`${this.brokenLinkCount} broken links found:`);
+    }
+    if (this.brokenLinkCount === 0) return;
     let counter = 1;
+    console.log('===== BROKEN LINKS =====');
     Object.keys(this.brokenLinks).forEach((key) => {
       this.brokenLinks[key].forEach((link) => {
         console.log(`------Broken link #${counter}------`);
@@ -175,18 +185,20 @@ class HubCrawl {
 
   async scrapeLinks(nightmare, link) {
     try {
+      const elementId = properElementId(link.href);
+      const selector = properSelector(link.href);
       return await nightmare
         .wait('body')
-        .evaluate(async (currentLink) => {
-          const target = document.getElementById('readme');
-          const links = target.querySelectorAll('a:not(.anchor)');
+        .evaluate(async (currentLink, targetId, targetSelector) => {
+          const target = document.getElementById(targetId);
+          const links = target.querySelectorAll(targetSelector);
           return Array.from(links).map((el) => {
             const href = el.href;
             const location = currentLink.href;
             const text = el.innerHTML;
             return { href, location, text };
           });
-        }, link);
+        }, link, elementId, selector);
     } catch (e) {
       return e;
     }
@@ -194,7 +206,11 @@ class HubCrawl {
 
   async visitAndScrapeLinks(link, workerNumber) {
     try {
-      const nightmare = this.workers[workerNumber];
+      const worker = this.workers[workerNumber];
+      if (worker.requests === 10) {
+        this.resetWorker(workerNumber);
+      }
+      const nightmare = worker.instance;
       return this.visitLink(nightmare, link)
         .then(() => (
           this.scrapeLinks(nightmare, link)
