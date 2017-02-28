@@ -34,11 +34,7 @@ class HubCrawl {
   }
 
   generateWorker(number) {
-    const newWorker = {
-      instance: generateNightmareInstance(false),
-      requests: 0,
-    };
-    this.workers[number] = newWorker;
+    this.workers[number] = generateNightmareInstance(false);
   }
 
   generateWorkers() {
@@ -62,15 +58,10 @@ class HubCrawl {
       }
     }
     numbers.forEach((number) => {
-      const nightmare = this.workers[number].instance;
+      const nightmare = this.workers[number];
       nightmare.end();
       this.workers[number] = null;
     });
-  }
-
-  resetWorker(number) {
-    this.tearDownWorkers(number);
-    this.generateWorker(number);
   }
 
   isOutOfScope(url) {
@@ -206,11 +197,7 @@ class HubCrawl {
 
   async visitAndScrapeLinks(link, workerNumber) {
     try {
-      const worker = this.workers[workerNumber];
-      if (worker.requests === 10) {
-        this.resetWorker(workerNumber);
-      }
-      const nightmare = worker.instance;
+      const nightmare = this.workers[workerNumber];
       return this.visitLink(nightmare, link)
         .then(() => (
           this.scrapeLinks(nightmare, link)
