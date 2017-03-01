@@ -242,9 +242,8 @@ class HubCrawl {
                   });
                   this.availableWorkers.enqueue(freeWorker);
                 })
-                .catch((e) => {
+                .catch(() => {
                   this.availableWorkers.enqueue(freeWorker);
-                  return;
                 });
             } else if (this.availableWorkers.length === this.maxWorkers &&
               this.linkQueue.length === 0) {

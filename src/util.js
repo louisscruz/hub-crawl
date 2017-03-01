@@ -1,5 +1,8 @@
 import Nightmare from 'nightmare';
 import rl from 'readline-sync';
+import DownloadManager from 'nightmare-download-manager';
+
+DownloadManager(Nightmare);
 
 export const ask = (msg, options) => (
   rl.question(msg, options)
@@ -46,6 +49,7 @@ export const generateNightmareInstance = show => (
       partition: 'persist: authenticated',
       images: false,
     },
+    ignoreDownloads: true,
     show,
   })
 );
