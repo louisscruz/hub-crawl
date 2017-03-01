@@ -12,6 +12,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var entry = (0, _util.ask)('Enter an entry point: ');
 var scope = (0, _util.ask)('Enter a scope url: (' + entry + ') ');
 
-var crawl = new _hubCrawl2.default(12, entry, scope);
+var crawler = new _hubCrawl2.default(12, entry, scope);
 
-crawl.traverseAndLogOutput();
+crawler.traverseAndLogOutput();

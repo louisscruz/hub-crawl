@@ -29,7 +29,8 @@ var HubCrawl = function () {
     this.maxWorkers = maxWorkers;
     this.workers = {};
     this.generateWorkers();
-    this.availableWorkers = this.generateAvailableWorkers();
+    this.availableWorkers = new _linkedList2.default();
+    this.generateAvailableWorkers();
     this.entry = entry;
     this.scope = scope || entry;
     this.linkQueue = this.generateLinkQueue();
@@ -65,11 +66,9 @@ var HubCrawl = function () {
   }, {
     key: 'generateAvailableWorkers',
     value: function generateAvailableWorkers() {
-      var availableWorkers = new _linkedList2.default();
       for (var i = 0; i < this.maxWorkers; i += 1) {
-        availableWorkers.enqueue(i);
+        this.availableWorkers.enqueue(i);
       }
-      return availableWorkers;
     }
   }, {
     key: 'tearDownWorkers',
@@ -294,9 +293,8 @@ var HubCrawl = function () {
                     }
                   });
                   _this5.availableWorkers.enqueue(freeWorker);
-                }).catch(function (e) {
+                }).catch(function () {
                   _this5.availableWorkers.enqueue(freeWorker);
-                  return;
                 });
               })();
             } else if (_this5.availableWorkers.length === _this5.maxWorkers && _this5.linkQueue.length === 0) {

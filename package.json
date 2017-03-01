@@ -2,14 +2,15 @@
   "name": "hub-crawl",
   "version": "2.0.1",
   "description": "Hub Crawl finds broken links in GitHub repos and wikis.",
-  "main": "./dist/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "mkdir -p dist && babel src --out-dir dist --extensions .js",
     "start": "npm run build && node --harmony ./dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "npm run build"
   },
   "bin": {
-    "hub-crawl": "./dist/index.js",
+    "hub-crawl": "./dist/index.js"
   },
   "author": "louisscruz",
   "license": "ISC",
