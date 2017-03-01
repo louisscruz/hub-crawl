@@ -13,7 +13,8 @@ class HubCrawl {
     this.maxWorkers = maxWorkers;
     this.workers = {};
     this.generateWorkers();
-    this.availableWorkers = this.generateAvailableWorkers();
+    this.availableWorkers = new LinkedList();
+    this.generateAvailableWorkers();
     this.entry = entry;
     this.scope = scope || entry;
     this.linkQueue = this.generateLinkQueue();
@@ -44,11 +45,9 @@ class HubCrawl {
   }
 
   generateAvailableWorkers() {
-    const availableWorkers = new LinkedList();
     for (let i = 0; i < this.maxWorkers; i += 1) {
-      availableWorkers.enqueue(i);
+      this.availableWorkers.enqueue(i);
     }
-    return availableWorkers;
   }
 
   tearDownWorkers(...numbers) {

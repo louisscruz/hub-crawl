@@ -1,13 +1,17 @@
 {
   "name": "hub-crawl",
   "version": "2.0.1",
-  "description": "Curriculum crawler checks for broken links in the App Academy curriculum.",
-  "main": "index.js",
+  "description": "Hub Crawl finds broken links in GitHub repos and wikis.",
+  "main": "./dist/index.js",
   "scripts": {
-    "start": "mkdir -p dist && babel src --out-dir dist --extensions .js && node --harmony ./dist/index.js",
+    "build": "mkdir -p dist && babel src --out-dir dist --extensions .js",
+    "start": "npm run build && node --harmony ./dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "bin": {
+    "hub-crawl": "./dist/index.js",
+  },
+  "author": "louisscruz",
   "license": "ISC",
   "dependencies": {
     "babel-cli": "^6.22.2",
