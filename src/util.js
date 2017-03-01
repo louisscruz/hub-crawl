@@ -41,6 +41,7 @@ export const averageLinksPerMinute = (startTime, visitedLinkCount) => {
 export const generateNightmareInstance = show => (
   Nightmare({
     pollInterval: 50,
+    gotoTimeout: 10000,
     webPreferences: {
       partition: 'persist: authenticated',
       images: false,

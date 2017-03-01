@@ -4,6 +4,6 @@ import { ask } from './util';
 const entry = ask('Enter an entry point: ');
 const scope = ask(`Enter a scope url: (${entry}) `);
 
-const crawl = new HubCrawl(24, entry, scope);
+const crawl = new HubCrawl(12, entry, scope);
 
 crawl.traverseAndLogOutput();

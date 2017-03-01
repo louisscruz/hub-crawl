@@ -41,9 +41,16 @@ class LinkedList {
 
   forEach(cb) {
     let currentNode = this.head;
-    while (currentNode.next) {
+    if (this.length === 0) {
+      return;
+    } else if (this.length === 1) {
       cb(currentNode.value);
-      currentNode = currentNode.next;
+    } else if (this.length) {
+      cb(currentNode.value);
+      while (currentNode.next) {
+        currentNode = currentNode.next;
+        cb(currentNode.value);
+      }
     }
   }
 }

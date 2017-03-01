@@ -147,7 +147,7 @@ class HubCrawl {
     }
   }
 
-  async visitLink(nightmare, link) {
+  visitLink(nightmare, link) {
     try {
       const startResponse = new Date();
       // Handle the case where a concurrent process has already visited
@@ -155,17 +155,13 @@ class HubCrawl {
       if (this.alreadyVisited(link.href)) {
         return Promise.reject('Already visited link');
       }
-      return await nightmare
+      return nightmare
         .goto(link.href)
         .then((res) => {
           this.addToResponseTime(startResponse);
           this.addToVisited(link.href);
           if (res.code >= 400) {
             this.addBrokenLink(link);
-            return Promise.reject('Broken link found');
-          }
-          if (this.isOutOfScope(link.href)) {
-            return Promise.reject('Link out of bounds');
           }
           return res;
         });
@@ -198,9 +194,10 @@ class HubCrawl {
   async visitAndScrapeLinks(link, workerNumber) {
     try {
       const nightmare = this.workers[workerNumber];
-      return this.visitLink(nightmare, link)
-        .then(() => (
-          this.scrapeLinks(nightmare, link)
+      return await this.visitLink(nightmare, link)
+        .then(() => {
+          if (!this.isOutOfScope(link.href)) {
+            return this.scrapeLinks(nightmare, link)
             .then((links) => {
               const unvisitedLinks = new LinkedList();
               links.forEach((el) => {
@@ -211,8 +208,9 @@ class HubCrawl {
               });
               return unvisitedLinks;
             })
-            .catch(e => Promise.reject(e))
-        ))
+            .catch(e => Promise.reject(e));
+          }
+        })
         .catch(e => Promise.reject(e));
     } catch (e) {
       return e;
@@ -231,25 +229,26 @@ class HubCrawl {
               this.displayLinkData(startTime, freeWorker);
               const currentLink = this.linkQueue.dequeue();
               this.visitAndScrapeLinks(currentLink, freeWorker)
-              .then((links) => {
-                if (!links) {
+                .then((links) => {
+                  this.displayLinkData(startTime, freeWorker);
+                  if (!links) {
+                    this.availableWorkers.enqueue(freeWorker);
+                    return;
+                  }
+                  links.forEach((link) => {
+                    if (!this.alreadyVisited(link.href)) {
+                      this.linkQueue.enqueue(link);
+                    }
+                  });
+                  this.availableWorkers.enqueue(freeWorker);
+                })
+                .catch((e) => {
                   this.availableWorkers.enqueue(freeWorker);
                   return;
-                }
-                links.forEach((link) => {
-                  if (!this.alreadyVisited(link.href) && !this.isOutOfScope(link.href)) {
-                    this.linkQueue.enqueue(link);
-                  }
                 });
-                this.availableWorkers.enqueue(freeWorker);
-              })
-              .catch(() => {
-                this.availableWorkers.enqueue(freeWorker);
-              });
             } else if (this.availableWorkers.length === this.maxWorkers &&
               this.linkQueue.length === 0) {
               clearInterval(handleWorkers);
-              this.tearDownWorkers();
               return resolve();
             }
           }, 50);
@@ -260,6 +259,7 @@ class HubCrawl {
   async traverseAndLogOutput() {
     this.traverseLinks().then(() => {
       this.displayErrors();
+      this.tearDownWorkers();
     });
   }
 }
