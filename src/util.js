@@ -1,5 +1,8 @@
 import Nightmare from 'nightmare';
 import rl from 'readline-sync';
+import DownloadManager from 'nightmare-download-manager';
+
+DownloadManager(Nightmare);
 
 export const ask = (msg, options) => (
   rl.question(msg, options)
@@ -41,10 +44,12 @@ export const averageLinksPerMinute = (startTime, visitedLinkCount) => {
 export const generateNightmareInstance = show => (
   Nightmare({
     pollInterval: 50,
+    gotoTimeout: 10000,
     webPreferences: {
       partition: 'persist: authenticated',
       images: false,
     },
+    ignoreDownloads: true,
     show,
   })
 );

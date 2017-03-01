@@ -1,6 +1,6 @@
 {
   "name": "hub-crawl",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Curriculum crawler checks for broken links in the App Academy curriculum.",
   "main": "index.js",
   "scripts": {
@@ -14,6 +14,7 @@
     "babel-loader": "^6.2.10",
     "babel-preset-es2015": "^6.22.0",
     "nightmare": "^2.9.1",
+    "nightmare-download-manager": "^0.2.4",
     "readline-sync": "^1.4.6",
     "webpack": "^2.2.1"
   },
