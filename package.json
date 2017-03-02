@@ -8,6 +8,11 @@
     "start": "npm run build && node --harmony ./dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/louisscruz/hub-crawl.git"
+  },
+  "homepage": "https://github.com/louisscruz/hub-crawl",
   "bin": {
     "hub-crawl": "./dist/index.js"
   },
