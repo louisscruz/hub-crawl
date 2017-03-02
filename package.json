@@ -1,6 +1,6 @@
 {
   "name": "hub-crawl",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Hub Crawl finds broken links in GitHub repos and wikis.",
   "main": "dist/index.js",
   "scripts": {
