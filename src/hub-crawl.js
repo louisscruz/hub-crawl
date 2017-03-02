@@ -131,16 +131,17 @@ class HubCrawl {
     console.log('========================');
   }
 
-  async login() {
+  async login(shouldLogin) {
     try {
+      if (!shouldLogin) return;
       const nightmare = this.generateNightmareInstance(true);
       return await nightmare
-        .goto('https://github.com/login')
-        .wait(function () {
-          const url = document.URL;
-          return url === 'https://github.com/';
-        })
-        .end();
+      .goto('https://github.com/login')
+      .wait(function () {
+        const url = document.URL;
+        return url === 'https://github.com/';
+      })
+      .end();
     } catch (e) {
       return e;
     }
@@ -216,8 +217,8 @@ class HubCrawl {
     }
   }
 
-  async traverseLinks() {
-    return this.login()
+  async traverseLinks(login) {
+    return this.login(login)
       .then(() => (
         new Promise((resolve) => {
           const startTime = new Date();
@@ -254,8 +255,8 @@ class HubCrawl {
       ));
   }
 
-  async traverseAndLogOutput() {
-    this.traverseLinks().then(() => {
+  async traverseAndLogOutput(login) {
+    this.traverseLinks(login).then(() => {
       this.displayErrors();
       this.tearDownWorkers();
     });

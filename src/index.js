@@ -1,11 +1,20 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --harmony
+import program from 'commander';
 
 import HubCrawl from './hub-crawl';
 import { ask } from './util';
 
-const entry = ask('Enter an entry point: ');
-const scope = ask(`Enter a scope url: (${entry}) `);
+program
+  .arguments('[entry] [scope]')
+  .option('-l --login', 'Speficies that there should be an initial log in')
+  .option('-w --workers <n>', 'Specifies the number of workers', parseInt)
+  .parse(process.argv);
 
-const crawler = new HubCrawl(12, entry, scope);
+const workers = program.workers || 8;
+const entry = program.args[0] || ask('Enter an entry point: ');
+const scope = program.args[1] || ask(`Enter a scope url: (${entry})`);
+const login = program.login;
 
-crawler.traverseAndLogOutput();
+const crawler = new HubCrawl(workers, entry, scope);
+
+crawler.traverseAndLogOutput(login);

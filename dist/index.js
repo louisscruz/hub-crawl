@@ -1,5 +1,9 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --harmony
 'use strict';
+
+var _commander = require('commander');
+
+var _commander2 = _interopRequireDefault(_commander);
 
 var _hubCrawl = require('./hub-crawl');
 
@@ -9,9 +13,15 @@ var _util = require('./util');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var entry = (0, _util.ask)('Enter an entry point: ');
-var scope = (0, _util.ask)('Enter a scope url: (' + entry + ') ');
+_commander2.default.arguments('[entry] [scope]').option('-l --login', 'Speficies that there should be an initial log in').option('-w --workers <n>', 'Specifies the number of workers', parseInt).parse(process.argv);
 
-var crawler = new _hubCrawl2.default(12, entry, scope);
+var workers = _commander2.default.workers || 8;
+var entry = _commander2.default.args[0] || (0, _util.ask)('Enter an entry point: ');
+var scope = _commander2.default.args[1] || (0, _util.ask)('Enter a scope url: (' + entry + ')');
+var login = _commander2.default.login;
 
-crawler.traverseAndLogOutput();
+console.log(workers);
+
+var crawler = new _hubCrawl2.default(workers, entry, scope);
+
+crawler.traverseAndLogOutput(login);

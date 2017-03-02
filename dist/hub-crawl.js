@@ -169,8 +169,9 @@ var HubCrawl = function () {
     }
   }, {
     key: 'login',
-    value: async function login() {
+    value: async function login(shouldLogin) {
       try {
+        if (!shouldLogin) return;
         var nightmare = this.generateNightmareInstance(true);
         return await nightmare.goto('https://github.com/login').wait(function () {
           var url = document.URL;
@@ -269,10 +270,10 @@ var HubCrawl = function () {
     }
   }, {
     key: 'traverseLinks',
-    value: async function traverseLinks() {
+    value: async function traverseLinks(login) {
       var _this5 = this;
 
-      return this.login().then(function () {
+      return this.login(login).then(function () {
         return new Promise(function (resolve) {
           var startTime = new Date();
           var handleWorkers = setInterval(function () {
@@ -307,10 +308,10 @@ var HubCrawl = function () {
     }
   }, {
     key: 'traverseAndLogOutput',
-    value: async function traverseAndLogOutput() {
+    value: async function traverseAndLogOutput(login) {
       var _this6 = this;
 
-      this.traverseLinks().then(function () {
+      this.traverseLinks(login).then(function () {
         _this6.displayErrors();
         _this6.tearDownWorkers();
       });
