@@ -20,8 +20,6 @@ var entry = _commander2.default.args[0] || (0, _util.ask)('Enter an entry point:
 var scope = _commander2.default.args[1] || (0, _util.ask)('Enter a scope url: (' + entry + ')');
 var login = _commander2.default.login;
 
-console.log(workers);
-
 var crawler = new _hubCrawl2.default(workers, entry, scope);
 
 crawler.traverseAndLogOutput(login);

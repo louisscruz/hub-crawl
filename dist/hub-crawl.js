@@ -226,7 +226,8 @@ var HubCrawl = function () {
             var href = el.href;
             var location = currentLink.href;
             var text = el.innerHTML;
-            return { href: href, location: location, text: text };
+            var hash = el.hash;
+            return { href: href, location: location, text: text, hash: hash };
           });
         }, link, elementId, selector);
       } catch (e) {
@@ -247,7 +248,7 @@ var HubCrawl = function () {
                 return _this4.scrapeLinks(nightmare, link).then(function (links) {
                   var unvisitedLinks = new _linkedList2.default();
                   links.forEach(function (el) {
-                    if (!_this4.visitedLinks[el.href]) {
+                    if (!_this4.visitedLinks[el.href] && (0, _util.notAnchor)(el)) {
                       var newLink = new _link2.default(el.href, el.location, el.text);
                       unvisitedLinks.enqueue(newLink);
                     }

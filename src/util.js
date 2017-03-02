@@ -30,6 +30,10 @@ export const properSelector = (url) => {
   return 'a:not(.anchor)';
 };
 
+export const notAnchor = link => (
+  link.hash.length > 0
+);
+
 export const averageLinksPerMinute = (startTime, visitedLinkCount) => {
   const now = new Date();
   const oneMinute = 1000 * 60;

@@ -6,6 +6,7 @@ import {
   clearScreen,
   properElementId,
   properSelector,
+  notAnchor,
 } from './util';
 
 class HubCrawl {
@@ -97,12 +98,12 @@ class HubCrawl {
 
   displayLinkData(startTime) {
     clearScreen();
-    console.log(`Visited ${this.visitedLinkCount} links.`);
+    console.log(`Hub Crawl has visited ${this.visitedLinkCount} links.`);
     console.log(`${this.linkQueue.length} links remaining.`);
-    console.log(`(averaging ${this.averageLinksPerMinute(startTime, this.visitedLinkCount)} links per minute)`);
-    console.log(`(averaging ${this.averageResponseTime} seconds per request)`);
-    console.log((`there are currently ${this.brokenLinkCount} broken links`));
-    console.log(`there are currently ${this.maxWorkers - this.availableWorkers.length} workers`);
+    console.log(`(currently averaging ${this.averageLinksPerMinute(startTime, this.visitedLinkCount)} links per minute)`);
+    console.log(`(currently averaging ${this.averageResponseTime} seconds per request)`);
+    console.log((`There are currently ${this.brokenLinkCount} broken links.`));
+    console.log(`There are currently ${this.maxWorkers - this.availableWorkers.length} workers.`);
   }
 
   displayErrors() {
@@ -136,12 +137,12 @@ class HubCrawl {
       if (!shouldLogin) return;
       const nightmare = this.generateNightmareInstance(true);
       return await nightmare
-      .goto('https://github.com/login')
-      .wait(function () {
-        const url = document.URL;
-        return url === 'https://github.com/';
-      })
-      .end();
+        .goto('https://github.com/login')
+        .wait(function () {
+          const url = document.URL;
+          return url === 'https://github.com/';
+        })
+        .end();
     } catch (e) {
       return e;
     }
@@ -183,7 +184,8 @@ class HubCrawl {
             const href = el.href;
             const location = currentLink.href;
             const text = el.innerHTML;
-            return { href, location, text };
+            const hash = el.hash;
+            return { href, location, text, hash };
           });
         }, link, elementId, selector);
     } catch (e) {
@@ -201,7 +203,7 @@ class HubCrawl {
             .then((links) => {
               const unvisitedLinks = new LinkedList();
               links.forEach((el) => {
-                if (!this.visitedLinks[el.href]) {
+                if (!this.visitedLinks[el.href] && notAnchor(el)) {
                   const newLink = new Link(el.href, el.location, el.text);
                   unvisitedLinks.enqueue(newLink);
                 }
