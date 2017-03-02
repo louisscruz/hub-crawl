@@ -4,13 +4,16 @@
 
 # Hub Crawl
 
-Hub Crawl finds broken links in large Github repositories. It finds links in the
-`readme` portions of the documents (or the `wiki-content` for wiki pages),
+Hub Crawl finds broken links in Github repositories. It finds links in the
+`readme` portions of the repos (or the `wiki-content` section for wiki pages),
 scrapes the links of those sections, and continues the crawl beginning with
-those newfound links. It essentially performs a concurrent breadth-first graph
+those newfound links. Additionally, the requests are made in parallel to ensure
+a speedy crawl. It essentially performs a concurrent, breadth-first graph
 traversal and logs broken links as it goes.
 
 ## Installation
+
+### Global Use
 
 To begin using Hub Crawl, install it globally with `npm`.
 
@@ -21,7 +24,21 @@ npm install -g hub-crawl
 Or, if you use `yarn`:
 
 ```
-yarn global hub-crawl
+yarn global add hub-crawl
+```
+
+### Use in Projects
+
+To add Hub Crawl to your project, install it with `npm`:
+
+```
+npm install hub-crawl
+```
+
+Or, if you use `yarn`:
+
+```
+yarn add hub-crawl
 ```
 
 ## Terminology
@@ -31,17 +48,17 @@ terms:
 
 ### `entry`
 
-The `entry` is the url that is first visited and scraped.
+The `entry` is the url that is first visited and scraped for links.
 
 ### `scope`
 
-The `scope` is a url that defines the limit of link scraping. For instance,
-assume the `scope` is set to `https://something.com/test`. If
-`https://something.com/test/somethingelse` is in the queue, it will be both
+The `scope` is a url that defines the limit of link scraping. For example, let's
+assume the `scope` is set to `https://github.com/louisscruz/hub-crawl`. If
+`https://github.com/louisscruz/hub-crawl/other` is in the queue, it will be both
 visited and scraped. However, if `https://google.com` is in the queue, it will
-be visited, but not scraped. This keeps Hub Crawl from scouring the entire
-internet. If you do not provide a scope, Hub Crawl defaults to using the
-`entry`.
+be visited, but not scraped because the url does not begin with the scope url.
+This keeps Hub Crawl from scouring the entire internet. If you do not provide a
+scope, Hub Crawl defaults to using the `entry` that was provided.
 
 ### `workers`
 
