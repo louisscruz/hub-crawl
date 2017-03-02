@@ -131,12 +131,12 @@ var HubCrawl = function () {
     key: 'displayLinkData',
     value: function displayLinkData(startTime) {
       (0, _util.clearScreen)();
-      console.log('Visited ' + this.visitedLinkCount + ' links.');
+      console.log('Hub Crawl has visited ' + this.visitedLinkCount + ' links.');
       console.log(this.linkQueue.length + ' links remaining.');
-      console.log('(averaging ' + this.averageLinksPerMinute(startTime, this.visitedLinkCount) + ' links per minute)');
-      console.log('(averaging ' + this.averageResponseTime + ' seconds per request)');
-      console.log('there are currently ' + this.brokenLinkCount + ' broken links');
-      console.log('there are currently ' + (this.maxWorkers - this.availableWorkers.length) + ' workers');
+      console.log('(currently averaging ' + this.averageLinksPerMinute(startTime, this.visitedLinkCount) + ' links per minute)');
+      console.log('(currently averaging ' + this.averageResponseTime + ' seconds per request)');
+      console.log('There are currently ' + this.brokenLinkCount + ' broken links.');
+      console.log('There are currently ' + (this.maxWorkers - this.availableWorkers.length) + ' workers.');
     }
   }, {
     key: 'displayErrors',
