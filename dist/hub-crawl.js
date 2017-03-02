@@ -135,7 +135,7 @@ var HubCrawl = function () {
         visitedLinkCount: this.visitedLinkCount,
         linkQueueLength: this.linkQueue.length,
         averageLinksPerMinute: this.averageLinksPerMinute(startTime, this.visitedLinkCount),
-        averageResponseTime: this.averageResponseTime,
+        averageResponseTime: this.averageResponseTime + 's',
         brokenLinkCount: this.brokenLinkCount,
         currentWorkerCount: this.maxWorkers - this.availableWorkers.length
       };
@@ -252,8 +252,9 @@ var HubCrawl = function () {
                 return _this4.scrapeLinks(nightmare, link).then(function (links) {
                   var unvisitedLinks = new _linkedList2.default();
                   links.forEach(function (el) {
-                    if (!_this4.visitedLinks[el.href] && (0, _util.notAnchor)(el)) {
-                      var newLink = new _link2.default(el.href, el.location, el.text);
+                    var url = (0, _util.filteredUrl)(el);
+                    if (!_this4.visitedLinks[url]) {
+                      var newLink = new _link2.default(url, el.location, el.text);
                       unvisitedLinks.enqueue(newLink);
                     }
                   });
