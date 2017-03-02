@@ -301,7 +301,7 @@ var HubCrawl = function () {
               })();
             } else if (_this5.availableWorkers.length === _this5.maxWorkers && _this5.linkQueue.length === 0) {
               clearInterval(handleWorkers);
-              return resolve();
+              return resolve(_this5.brokenLinks);
             }
           }, 50);
         });
