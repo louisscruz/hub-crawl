@@ -250,7 +250,7 @@ class HubCrawl {
             } else if (this.availableWorkers.length === this.maxWorkers &&
               this.linkQueue.length === 0) {
               clearInterval(handleWorkers);
-              return resolve();
+              return resolve(this.brokenLinks);
             }
           }, 50);
         })
