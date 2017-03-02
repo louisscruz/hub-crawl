@@ -86,6 +86,10 @@ the crawl is authenticated while running. This is useful for private repos.
 If this option is provided, it will set the maximum number of workers. For
 instance, `-w 24` would set a maximum of 24 workers.
 
+##### `-V`
+
+This option shows the current version of `hub-crawl`.
+
 ### Importing
 
 If you would like to use Hub Crawl in a project, feel free to import it as
