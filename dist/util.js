@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.generateNightmareInstance = exports.averageLinksPerMinute = exports.notAnchor = exports.properSelector = exports.properElementId = exports.isWiki = exports.clearScreen = exports.ask = undefined;
+exports.generateNightmareInstance = exports.averageLinksPerMinute = exports.notAnchor = exports.properSelector = exports.properElementId = exports.isWiki = exports.displayDataTable = exports.clearScreen = exports.ask = undefined;
 
 var _nightmare = require('nightmare');
 
@@ -17,6 +17,10 @@ var _nightmareDownloadManager = require('nightmare-download-manager');
 
 var _nightmareDownloadManager2 = _interopRequireDefault(_nightmareDownloadManager);
 
+var _cliTable = require('cli-table');
+
+var _cliTable2 = _interopRequireDefault(_cliTable);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 (0, _nightmareDownloadManager2.default)(_nightmare2.default);
@@ -27,6 +31,24 @@ var ask = exports.ask = function ask(msg, options) {
 
 var clearScreen = exports.clearScreen = function clearScreen() {
   process.stdout.write('\x1B[2J\x1B[0;0f');
+};
+
+var displayDataTable = exports.displayDataTable = function displayDataTable(info) {
+  var table = new _cliTable2.default();
+  table.push({
+    'Current Visited Links': info.visitedLinkCount
+  }, {
+    'Current Remaining Links': info.linkQueueLength
+  }, {
+    'Current Links Per Minute': info.averageLinksPerMinute
+  }, {
+    'Current Average Response Time': info.averageResponseTime
+  }, {
+    'Current # of Broken Links': info.brokenLinkCount
+  }, {
+    'Current # of Workers': info.currentWorkerCount
+  });
+  console.log(table.toString());
 };
 
 var isWiki = exports.isWiki = function isWiki(url) {
@@ -48,7 +70,7 @@ var properSelector = exports.properSelector = function properSelector(url) {
 };
 
 var notAnchor = exports.notAnchor = function notAnchor(link) {
-  return link.hash.length > 0;
+  return !link.hash || link.hash.length === 0;
 };
 
 var averageLinksPerMinute = exports.averageLinksPerMinute = function averageLinksPerMinute(startTime, visitedLinkCount) {

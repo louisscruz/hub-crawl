@@ -41,6 +41,7 @@ var HubCrawl = function () {
     this.averageResponseTime = 0;
     this.generateNightmareInstance = _util.generateNightmareInstance;
     this.averageLinksPerMinute = _util.averageLinksPerMinute;
+    this.globalStart = new Date();
   }
 
   _createClass(HubCrawl, [{
@@ -130,13 +131,15 @@ var HubCrawl = function () {
   }, {
     key: 'displayLinkData',
     value: function displayLinkData(startTime) {
-      (0, _util.clearScreen)();
-      console.log('Hub Crawl has visited ' + this.visitedLinkCount + ' links.');
-      console.log(this.linkQueue.length + ' links remaining.');
-      console.log('(currently averaging ' + this.averageLinksPerMinute(startTime, this.visitedLinkCount) + ' links per minute)');
-      console.log('(currently averaging ' + this.averageResponseTime + ' seconds per request)');
-      console.log('There are currently ' + this.brokenLinkCount + ' broken links.');
-      console.log('There are currently ' + (this.maxWorkers - this.availableWorkers.length) + ' workers.');
+      var info = {
+        visitedLinkCount: this.visitedLinkCount,
+        linkQueueLength: this.linkQueue.length,
+        averageLinksPerMinute: this.averageLinksPerMinute(startTime, this.visitedLinkCount),
+        averageResponseTime: this.averageResponseTime,
+        brokenLinkCount: this.brokenLinkCount,
+        currentWorkerCount: this.maxWorkers - this.availableWorkers.length
+      };
+      (0, _util.displayDataTable)(info);
     }
   }, {
     key: 'displayErrors',
@@ -149,6 +152,7 @@ var HubCrawl = function () {
       } else {
         console.log(this.brokenLinkCount + ' broken links found:');
       }
+      this.displayLinkData(this.globalStart);
       if (this.brokenLinkCount === 0) return;
       var counter = 1;
       console.log('===== BROKEN LINKS =====');
@@ -281,6 +285,7 @@ var HubCrawl = function () {
             if (_this5.availableWorkers.length > 0 && _this5.linkQueue.length > 0) {
               (function () {
                 var freeWorker = _this5.availableWorkers.dequeue();
+                (0, _util.clearScreen)();
                 _this5.displayLinkData(startTime, freeWorker);
                 var currentLink = _this5.linkQueue.dequeue();
                 _this5.visitAndScrapeLinks(currentLink, freeWorker).then(function (links) {
@@ -303,7 +308,7 @@ var HubCrawl = function () {
               clearInterval(handleWorkers);
               return resolve(_this5.brokenLinks);
             }
-          }, 50);
+          }, 100);
         });
       });
     }

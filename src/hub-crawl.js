@@ -7,6 +7,7 @@ import {
   properElementId,
   properSelector,
   notAnchor,
+  displayDataTable,
 } from './util';
 
 class HubCrawl {
@@ -26,6 +27,7 @@ class HubCrawl {
     this.averageResponseTime = 0;
     this.generateNightmareInstance = generateNightmareInstance;
     this.averageLinksPerMinute = averageLinksPerMinute;
+    this.globalStart = new Date();
   }
 
   generateLinkQueue() {
@@ -97,13 +99,15 @@ class HubCrawl {
   }
 
   displayLinkData(startTime) {
-    clearScreen();
-    console.log(`Hub Crawl has visited ${this.visitedLinkCount} links.`);
-    console.log(`${this.linkQueue.length} links remaining.`);
-    console.log(`(currently averaging ${this.averageLinksPerMinute(startTime, this.visitedLinkCount)} links per minute)`);
-    console.log(`(currently averaging ${this.averageResponseTime} seconds per request)`);
-    console.log((`There are currently ${this.brokenLinkCount} broken links.`));
-    console.log(`There are currently ${this.maxWorkers - this.availableWorkers.length} workers.`);
+    const info = {
+      visitedLinkCount: this.visitedLinkCount,
+      linkQueueLength: this.linkQueue.length,
+      averageLinksPerMinute: this.averageLinksPerMinute(startTime, this.visitedLinkCount),
+      averageResponseTime: this.averageResponseTime,
+      brokenLinkCount: this.brokenLinkCount,
+      currentWorkerCount: this.maxWorkers - this.availableWorkers.length,
+    };
+    displayDataTable(info);
   }
 
   displayErrors() {
@@ -113,6 +117,7 @@ class HubCrawl {
     } else {
       console.log(`${this.brokenLinkCount} broken links found:`);
     }
+    this.displayLinkData(this.globalStart);
     if (this.brokenLinkCount === 0) return;
     let counter = 1;
     console.log('===== BROKEN LINKS =====');
@@ -228,6 +233,7 @@ class HubCrawl {
             if (this.availableWorkers.length > 0 &&
               this.linkQueue.length > 0) {
               const freeWorker = this.availableWorkers.dequeue();
+              clearScreen();
               this.displayLinkData(startTime, freeWorker);
               const currentLink = this.linkQueue.dequeue();
               this.visitAndScrapeLinks(currentLink, freeWorker)
@@ -252,7 +258,7 @@ class HubCrawl {
               clearInterval(handleWorkers);
               return resolve(this.brokenLinks);
             }
-          }, 50);
+          }, 100);
         })
       ));
   }
