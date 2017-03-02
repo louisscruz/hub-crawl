@@ -5,6 +5,7 @@ import HubCrawl from './hub-crawl';
 import { ask } from './util';
 
 program
+  .version('2.1.0')
   .arguments('[entry] [scope]')
   .option('-l --login', 'Speficies that there should be an initial log in')
   .option('-w --workers <n>', 'Specifies the number of workers', parseInt)
