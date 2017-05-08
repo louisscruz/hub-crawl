@@ -48,6 +48,7 @@ var displayDataTable = exports.displayDataTable = function displayDataTable(info
   }, {
     'Current # of Workers': info.currentWorkerCount
   });
+  clearScreen();
   console.log(table.toString());
 };
 

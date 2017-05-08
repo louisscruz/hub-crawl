@@ -28,6 +28,7 @@ export const displayDataTable = (info) => {
   }, {
     'Current # of Workers': info.currentWorkerCount,
   });
+  clearScreen();
   console.log(table.toString());
 };
 
