@@ -6,7 +6,7 @@ import {
   clearScreen,
   properElementId,
   properSelector,
-  notAnchor,
+  filteredUrl,
   displayDataTable,
 } from './util';
 
@@ -103,7 +103,7 @@ class HubCrawl {
       visitedLinkCount: this.visitedLinkCount,
       linkQueueLength: this.linkQueue.length,
       averageLinksPerMinute: this.averageLinksPerMinute(startTime, this.visitedLinkCount),
-      averageResponseTime: this.averageResponseTime,
+      averageResponseTime: `${this.averageResponseTime}s`,
       brokenLinkCount: this.brokenLinkCount,
       currentWorkerCount: this.maxWorkers - this.availableWorkers.length,
     };
@@ -208,8 +208,9 @@ class HubCrawl {
             .then((links) => {
               const unvisitedLinks = new LinkedList();
               links.forEach((el) => {
-                if (!this.visitedLinks[el.href] && notAnchor(el)) {
-                  const newLink = new Link(el.href, el.location, el.text);
+                const url = filteredUrl(el);
+                if (!this.visitedLinks[url]) {
+                  const newLink = new Link(url, el.location, el.text);
                   unvisitedLinks.enqueue(newLink);
                 }
               });

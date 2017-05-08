@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.generateNightmareInstance = exports.averageLinksPerMinute = exports.notAnchor = exports.properSelector = exports.properElementId = exports.isWiki = exports.displayDataTable = exports.clearScreen = exports.ask = undefined;
+exports.generateNightmareInstance = exports.averageLinksPerMinute = exports.filteredUrl = exports.hashAtEnd = exports.properSelector = exports.properElementId = exports.isWiki = exports.displayDataTable = exports.clearScreen = exports.ask = undefined;
 
 var _nightmare = require('nightmare');
 
@@ -70,8 +70,21 @@ var properSelector = exports.properSelector = function properSelector(url) {
   return 'a:not(.anchor)';
 };
 
-var notAnchor = exports.notAnchor = function notAnchor(link) {
-  return !link.hash || link.hash.length === 0;
+var hashAtEnd = exports.hashAtEnd = function hashAtEnd(link) {
+  var hash = link.hash,
+      href = link.href;
+
+  return href.slice(href.length - hash.length);
+};
+
+var filteredUrl = exports.filteredUrl = function filteredUrl(link) {
+  if (hashAtEnd(link)) {
+    var hash = link.hash,
+        href = link.href;
+
+    return href.slice(0, href.length - hash.length);
+  }
+  return link.href;
 };
 
 var averageLinksPerMinute = exports.averageLinksPerMinute = function averageLinksPerMinute(startTime, visitedLinkCount) {

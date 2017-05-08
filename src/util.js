@@ -50,9 +50,18 @@ export const properSelector = (url) => {
   return 'a:not(.anchor)';
 };
 
-export const notAnchor = link => (
-  !link.hash || link.hash.length === 0
-);
+export const hashAtEnd = (link) => {
+  const { hash, href } = link;
+  return href.slice(href.length - hash.length);
+};
+
+export const filteredUrl = (link) => {
+  if (hashAtEnd(link)) {
+    const { hash, href } = link;
+    return href.slice(0, href.length - hash.length);
+  }
+  return link.href;
+};
 
 export const averageLinksPerMinute = (startTime, visitedLinkCount) => {
   const now = new Date();
