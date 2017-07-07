@@ -164,5 +164,5 @@ that they are indeed broken.
   - [x] Allow for CLI usage
   - [x] Also allow for fallback prompts
 - [ ] Perform a second check on all broken links to minimize false positives
-- [ ] Make the output look better
+- [x] Make the output look better
 - [ ] Allow for the crawler to be easily distributed
